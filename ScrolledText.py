@@ -8,13 +8,25 @@ class ScrolledText(tk.Frame):
         self.text.configure(yscrollcommand=self.vsb.set)
         self.vsb.pack(side="right", fill="y")
         self.text.pack(side="left", fill="both", expand=True)
-        self.text.bind("<Key>", self.text_changed)
+        self.text.bind("<KeyRelease>", self.text_changed)
         self.text.bind('<Delete>', self.text_del)
         self.text.bind('<BackSpace>', self.text_backspace)
         self.textvariable = textvariable
         self.text.bind('<Enter>', self.enter)
         self.text.bind('<Leave>', self.leave)
+       
+    def configure(self, **kwargs):
+        self.state(kwargs.get('state',None))
         
+    def state(self, state):
+        self.text.configure(state=state)
+        
+    def delete(self, first, last=None):
+        self.text.delete(first, last)
+        
+    def insert(self, location, item):
+        self.text.insert(location, item)
+    
         
     def enter(self, event):
         self.text.config(cursor="hand2")
@@ -23,8 +35,9 @@ class ScrolledText(tk.Frame):
         self.text.config(cursor="")
 
     def text_changed(self, key):
-        self.textvariable.set('')
-        self.textvariable.set(self.text.get('1.0', tk.END))
+        if str(self.text.cget('state')) == 'normal':
+            self.textvariable.set('')
+            self.textvariable.set(self.text.get('1.0', tk.END))
         
     def text_backspace(self, key):
         self.textvariable.set(self.text.get('1.0', self.text.index(tk.CURRENT + ' -1 chars')))
@@ -43,5 +56,6 @@ if __name__ == '__main__':
     textbox_text = tk.StringVar()
     textbox_text.trace("w", lambda name, index, mode, sv=textbox_text: text_changed('textbox_text', textbox_text))
     scrolled_text = ScrolledText(gui, textvariable=textbox_text)
+    scrolled_text.configure(state = 'disabled')
     scrolled_text.pack()
     gui.mainloop()
